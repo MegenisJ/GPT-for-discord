@@ -63,6 +63,7 @@ public class Program
 
     private async Task SlashCommandHandler(SocketSlashCommand command)
     {
+        await command.RespondAsync(command.User.Username + " asked :" + command.Data.Options.First().Value.ToString());
         IOpenAIProxy chatOpenAI = new OpenAIProxy(
             apiKey: config.GetValue<string>("GPT:apiKey"),
             organizationId: config.GetValue<string>("GPT:organizationId"));
@@ -73,7 +74,7 @@ public class Program
             foreach (var item in results)
             {
                 Console.WriteLine($"{item.Role}: {item.Content}");
-                await command.RespondAsync($"{item.Content}");
+                await command.FollowupAsync($"{item.Content}");
             }
             
         }
