@@ -1,4 +1,5 @@
 ﻿using GPT_for_discord.Services.Interfaces;
+using Microsoft.Extensions.Configuration;
 using Standard.AI.OpenAI.Clients.OpenAIs;
 using Standard.AI.OpenAI.Models.Configurations;
 using Standard.AI.OpenAI.Models.Services.Foundations.ChatCompletions;
@@ -13,17 +14,20 @@ namespace GPT_for_discord.Services;
 public class OpenAIProxy : IOpenAIProxy
 {
     readonly OpenAIClient openAIClient;
-
     //all messages in the conversation
     readonly List<ChatCompletionMessage> _messages;
 
-    public OpenAIProxy(string apiKey, string organizationId)
+    public OpenAIProxy()
     {
+        IConfiguration config = new ConfigurationBuilder()
+            .AddJsonFile("appsettings.json")
+            .AddEnvironmentVariables()
+            .Build();
         //initialize the configuration with api key and sub
         var openAIConfigurations = new OpenAIConfigurations
         {
-            ApiKey = apiKey,
-            OrganizationId = organizationId
+            ApiKey = config.GetValue<string>("GPT:apiKey"),
+            OrganizationId = config.GetValue<string>("GPT:organizationId")
         };
 
         openAIClient = new OpenAIClient(openAIConfigurations);
@@ -65,7 +69,7 @@ public class OpenAIProxy : IOpenAIProxy
             {
                 Model = "gpt-3.5-turbo",
                 Messages = _messages.ToArray(),
-                Temperature = 0.2,
+                Temperature = 2,
                 MaxTokens = 800
             }
         };
