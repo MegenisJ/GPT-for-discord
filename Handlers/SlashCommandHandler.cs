@@ -77,38 +77,4 @@ public class SlashCommandHandler
 
         return true;
     }
-
-    internal Func<SocketSlashCommand, Task> Handler(List<GPTCommand> commands)
-    {
-        if (command.CommandName == SlashCommands.commandbuilder.ToString())
-        {
-            _ = await CommandBuilderResponse(command);
-            return;
-        }
-        var response = Array.Empty<ChatCompletionMessage>();
-        await command.RespondAsync(command.User.Username + " asked : " + command.Data.Options.First().Value.ToString());
-        var commandMessage = command.Data.Options.First().Value.ToString();
-
-        if (command.CommandName == SlashCommands.gpt.ToString())
-        {
-            response = await AiResponseHandler(commandMessage, "", "");
-
-        }
-        if (command.CommandName == SlashCommands.commandbuilder.ToString())
-        {
-            _ = await CommandBuilderResponse(command);
-        }
-
-        foreach (var item in response)
-        {
-            int chunkSize = 2000;
-            int stringLength = item.Content.Length;
-            for (int i = 0; i < stringLength; i += chunkSize)
-            {
-                if (i + chunkSize > stringLength) chunkSize = stringLength - i;
-                Console.WriteLine(item.Content.Substring(i, chunkSize));
-                await command.FollowupAsync($"```{item.Content.Substring(i, chunkSize)}```");
-            }
-        }
-    }
 }
