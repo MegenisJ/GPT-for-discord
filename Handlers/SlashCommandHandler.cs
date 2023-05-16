@@ -9,49 +9,59 @@ namespace GPT_for_discord.Handlers;
 
 public class SlashCommandHandler
 {
-    private readonly IOpenAIProxy chatOpenAI;
-    public SlashCommandHandler(IOpenAIProxy chatOpenAI)
+    private readonly IOpenAIProxy _chatOpenAI;
+    private readonly List<GPTCommand> _gptCommands;
+    public SlashCommandHandler(IOpenAIProxy chatOpenAI, List<GPTCommand>  gptCommands)
     {
-        this.chatOpenAI = chatOpenAI;
+        _chatOpenAI = chatOpenAI;
+        _gptCommands = gptCommands;
     }
     public async Task Handler(SocketSlashCommand command)
     {
-        if (command.CommandName == SlashCommands.commandbuilder.ToString())
+        _ = Task.Run(async () =>
         {
-            _ = await CommandBuilderResponse(command);
-            return;
-        }
-        var response = Array.Empty<ChatCompletionMessage>();
-        await command.RespondAsync(command.User.Username + " asked : " + command.Data.Options.First().Value.ToString());
-        var commandMessage = command.Data.Options.First().Value.ToString();
-
-        if (command.CommandName == SlashCommands.gpt.ToString())
-        {
-            response = await AiResponseHandler(commandMessage, "", "");
-
-        }
-        if (command.CommandName == SlashCommands.commandbuilder.ToString())
-        {
-            _ = await CommandBuilderResponse(command);
-        }
-
-        foreach (var item in response)
-        {
-            int chunkSize = 2000;
-            int stringLength = item.Content.Length;
-            for (int i = 0; i < stringLength; i += chunkSize)
+            if (command.CommandName == SlashCommands.commandbuilder.ToString())
             {
-                if (i + chunkSize > stringLength) chunkSize = stringLength - i;
-                Console.WriteLine(item.Content.Substring(i, chunkSize));
-                await command.FollowupAsync($"```{item.Content.Substring(i, chunkSize)}```");
+                _ = await CommandBuilderResponse(command);
+                return Task.CompletedTask;
             }
-        }
+            var response = Array.Empty<ChatCompletionMessage>();
+            await command.RespondAsync(command.User.Username + " asked : " + command.Data.Options.First().Value.ToString());
+            var commandMessage = command.Data.Options.First().Value.ToString();
+            if (command.CommandName == SlashCommands.gpt.ToString())
+            {
+                response = await AiResponseHandler(commandMessage, "", "");
+
+            }
+            foreach (var gptCommand in _gptCommands)
+            {
+                if (command.CommandName == gptCommand.name)
+                {
+                    response = await AiResponseHandler(commandMessage, gptCommand.AiPrefix, gptCommand.AiSuffix);
+                }
+            }
+
+            foreach (var item in response)
+            {
+                int chunkSize = 1500;
+                int stringLength = item.Content.Length;
+                for (int i = 0; i < stringLength; i += chunkSize)
+                {
+                    if (i + chunkSize > stringLength) chunkSize = stringLength - i;
+                    Console.WriteLine(item.Content.Substring(i, chunkSize));
+                    await command.FollowupAsync($"```{item.Content.Substring(i, chunkSize)}```");
+                }
+            }
+            return Task.CompletedTask;
+        });
+       
+        
     }
     public async Task<ChatCompletionMessage[]> AiResponseHandler(string command, string prefix, string suffix)
     {
         try
         {
-            var results = await chatOpenAI.SendChatMessage(prefix + command + suffix);
+            var results = await _chatOpenAI.SendChatMessage(prefix + command + suffix);
 
             return results;
 

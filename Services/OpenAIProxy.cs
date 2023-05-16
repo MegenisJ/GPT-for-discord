@@ -69,7 +69,7 @@ public class OpenAIProxy : IOpenAIProxy
             {
                 Model = "gpt-3.5-turbo",
                 Messages = _messages.ToArray(),
-                Temperature = 2,
+                Temperature = 0.8,
                 MaxTokens = 800
             }
         };

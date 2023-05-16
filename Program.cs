@@ -20,7 +20,7 @@ public class Program
     {
         _serviceProvider = GPT_for_discord.Services.ServiceProvider.CreateServices();
         discordClient = _serviceProvider.GetRequiredService<DiscordSocketClient>();
-        _slashCommandHandler = new SlashCommandHandler(_serviceProvider.GetRequiredService<IOpenAIProxy>());
+        _slashCommandHandler = new SlashCommandHandler(_serviceProvider.GetRequiredService<IOpenAIProxy>(), CustomCommands);
     }
 
     static void Main(string[] args)
@@ -43,8 +43,7 @@ public class Program
         Commands = setup.InitialCommands;
 
         await discordClient.LoginAsync(TokenType.Bot, config.GetValue<string>("Discord:token"));
-        await discordClient.StartAsync();
-
+        await discordClient.StartAsync();  
         discordClient.Ready += CreateSlashCommands;
         discordClient.SlashCommandExecuted += _slashCommandHandler.Handler;
         //TODO: move this implementation to a seperate file

@@ -24,7 +24,7 @@ public class Setup
         {
             builder = new SlashCommandBuilder()
             {
-                Name = SlashCommands.gpt.ToString(),
+                Name = SlashCommands.commandbuilder.ToString(),
                 Description = "ask me anything!"
             }
         }
